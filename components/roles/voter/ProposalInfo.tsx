@@ -5,9 +5,18 @@ import { VOTING_CONTRACT_ABI, VOTING_CONTRACT_ADDRESS } from "@/constants/voting
 import TitleDivider from "@/components/TitleDivider"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Abi } from "viem"
 
 interface ProposalInfoProps {
   workflowStatus: number;
+}
+
+interface ProposalData {
+  result: {
+    description: string;
+    voteCount: number;
+    hasVoted?: boolean;
+  };
 }
 
 const ProposalInfo = ({ workflowStatus }: ProposalInfoProps) => {
@@ -17,24 +26,27 @@ const ProposalInfo = ({ workflowStatus }: ProposalInfoProps) => {
   const { proposals, votes } = useEventsData()
 
   const contracts = proposals.map((proposal, index) => ({
-    abi: VOTING_CONTRACT_ABI,
-    address: VOTING_CONTRACT_ADDRESS,
+    abi: VOTING_CONTRACT_ABI as Abi,
+    address: VOTING_CONTRACT_ADDRESS as `0x${string}`,
     functionName: "getOneProposal",
-    args: [index + 1],
+    args: [BigInt(index + 1)],
   }))
 
-  const { data: proposalData } = useReadContracts({
+  const { data: proposalData } = useReadContracts<ProposalData[]>({
     contracts: contracts,
     query: { enabled: proposals.length > 0 },
   })
 
   useEffect(() => {
     if (proposalData) {
-      const processedProposalData = proposalData.map((data, index) => ({
-        description: data?.result?.description ?? "",
-        voteCount: data?.result?.voteCount ?? 0,
+      const processedProposalData = proposalData.map((data, index) => {
+        const result = data?.result as ProposalData['result'];
+        return {
+        description: result?.description ?? "",
+        voteCount: result?.voteCount ?? 0,
         index: index + 1,
-      }))
+        }
+      })
       processedProposalData.sort((a, b) => b.voteCount - a.voteCount)
       setPropositionsList(processedProposalData)
     }

@@ -4,8 +4,15 @@ import { VOTING_CONTRACT_ABI, VOTING_CONTRACT_ADDRESS } from "@/constants/voting
 import TitleDivider from "@/components/TitleDivider";
 import { useEventsData } from "@/components/events/EventsData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getAddress } from "viem";
+import { Abi, getAddress } from "viem";
 import { Button } from "@/components/ui/button";
+
+interface VoterData {
+  result: {
+    hasVoted: boolean;
+    votedProposalId: number;
+  };
+}
 
 const VoterInfo = () => {
   const [voterList, setVoterList] = useState<{ address: string; hasVoted: boolean; votedProposalId: number }[]>([]);
@@ -14,8 +21,8 @@ const VoterInfo = () => {
   const { voters, proposals, votes } = useEventsData();
 
   const contracts = voters.map((voter) => ({
-    abi: VOTING_CONTRACT_ABI,
-    address: VOTING_CONTRACT_ADDRESS,
+    abi: VOTING_CONTRACT_ABI as Abi,
+    address: VOTING_CONTRACT_ADDRESS as `0x${string}`,
     functionName: "getVoter",
     args: [getAddress(voter.toLowerCase())],
   }));
@@ -28,11 +35,14 @@ const VoterInfo = () => {
   useEffect(() => {
     if (voterData) {
       console.log("voterData:", voterData);
-      const processedVoterData = voterData.map((data, index) => ({
+      const processedVoterData = voterData.map((data, index) =>{
+        const result = data?.result as VoterData['result'];
+        return {
         address: voters[index],
-        hasVoted: data?.result?.hasVoted ?? false,
-        votedProposalId: data?.result?.votedProposalId ?? null,
-      }));
+        hasVoted: result?.hasVoted ?? false,
+        votedProposalId: result?.votedProposalId ?? null,
+        }
+      });
       setVoterList(processedVoterData);
     }
   }, [voterData]);
