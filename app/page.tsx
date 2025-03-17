@@ -16,7 +16,7 @@ import VoteEnded from "@/components/VoteEnded";
 
 export default function Home() {
   const roles = useRoles()
-  const { address, isConnecting, isConnected } = useAccount()
+  const { isConnecting, isConnected } = useAccount()
   const [isOwner, setIsOwner] = useState(false)
   const [isVoter, setIsVoter] = useState(false)
 
